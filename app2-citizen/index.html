@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 시민 선서 - 신뢰할 수 있는 데이터 세상</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for cute icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter & Cute Korean Font via Gowun Dodum) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Gowun Dodum', 'Inter', sans-serif;
+            background-color: #FDF6E2; /* Warm beige matching the detective paper tone */
+        }
+        .custom-border {
+            border: 4px solid #1E3A8A;
+        }
+        .seal-bg {
+            background: radial-gradient(circle, #F59E0B 0%, #D97706 100%);
+        }
+        /* Elegant smooth transitions */
+        .page-transition {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between antialiased selection:bg-amber-200">
+
+    <!-- Beautiful In-App Alert / Notification Toast (Replaces blockable alert() calls) -->
+    <div id="toast-notification" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 hidden opacity-0 transition-all duration-300 max-w-sm w-11/12">
+        <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border-2 border-amber-400 flex items-center space-x-3">
+            <span class="text-2xl">⚠️</span>
+            <p id="toast-text" class="text-sm font-semibold leading-relaxed"></p>
+        </div>
+    </div>
+
+    <!-- Sound Synthesizer Utility using Web Audio API -->
+    <script>
+        const playSound = (type) => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.15);
+                } else if (type === 'check') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, ctx.currentTime);
+                    osc.frequency.setValueAtTime(600, ctx.currentTime + 0.08);
+                    osc.frequency.setValueAtTime(900, ctx.currentTime + 0.16);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'success') {
+                    // Fanfare
+                    const now = ctx.currentTime;
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    notes.forEach((freq, idx) => {
+                        const o = ctx.createOscillator();
+                        const g = ctx.createGain();
+                        o.connect(g);
+                        g.connect(ctx.destination);
+                        o.type = 'triangle';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0, now);
+                        g.gain.linearRampToValueAtTime(0.1, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.3);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.3);
+                    });
+                } else if (type === 'brush') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(160, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(190, ctx.currentTime + 0.04);
+                    gain.gain.setValueAtTime(0.03, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.05);
+                }
+            } catch (e) {
+                console.log('AudioContext not allowed or supported yet.');
+            }
+        };
+
+        // Custom notification trigger
+        function showNotification(message) {
+            const toast = document.getElementById('toast-notification');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = message;
+            
+            toast.classList.remove('hidden');
+            // Small timeout to allow transition to trigger
+            setTimeout(() => {
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+            }, 10);
+            
+            playSound('check');
+            
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                hideNotification();
+            }, 3000);
+        }
+
+        function hideNotification() {
+            const toast = document.getElementById('toast-notification');
+            toast.classList.remove('opacity-100');
+            toast.classList.add('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+
+    <!-- Header Section -->
+    <header class="bg-blue-900 text-white py-4 px-6 shadow-md border-b-4 border-amber-500">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🕵️‍♂️</span>
+                <div>
+                    <h1 class="font-extrabold text-lg md:text-xl tracking-wide">데이터 탐정단 워크숍</h1>
+                    <p class="text-xs text-amber-300">가짜 리뷰 사건을 넘어 올바른 데이터 세상으로!</p>
+                </div>
+            </div>
+            <div class="bg-amber-500 text-blue-900 font-bold px-3 py-1 rounded-full text-xs animate-pulse">
+                최종 단계 📜
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow">
+        
+        <!-- STEP 1: WELCOME & ASSIGNMENT RECAP -->
+        <section id="step-intro" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 custom-border page-transition">
+            <div class="text-center mb-6">
+                <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full mb-2 animate-bounce">
+                    임무 완료 축하! 🎉
+                </span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-blue-900">진짜 순위를 밝혀낸 데이터 탐정님들!</h2>
+                <p class="text-slate-600 mt-2 text-sm md:text-base">
+                    AI 맛집 분석단 시스템을 활용해 <strong>가짜 리뷰로 1위가 된 맛없는 맛집</strong>의 실체를 파헤쳤나요?<br>
+                    정직하고 올바른 데이터를 찾는 여정의 끝에서, 이제는 모두가 신뢰할 수 있는 데이터 세상을 약속하는 <strong>'데이터 시민'</strong>이 될 차례입니다!
+                </p>
+            </div>
+
+            <!-- Visual Reference to image_ed7b00.png -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
+                <div class="flex items-start space-x-3">
+                    <div class="bg-blue-100 p-2 rounded-lg text-blue-900 font-bold">🕵️‍♂️</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">해결된 사건 (image_ed7b00.png)</h4>
+                        <p class="text-xs text-slate-500 mt-1">가짜 리뷰로 소비자를 속이던 악의적인 식당의 리뷰 데이터를 분석하여 올바른 순위로 되돌려 놓았습니다.</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="bg-amber-100 p-2 rounded-lg text-amber-900 font-bold">📜</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">새로운 다짐 (image_ed7aa8.png)</h4>
+                        <p class="text-xs text-slate-500 mt-1">사건 해결에 그치지 않고, 우리 스스로가 정직하고 비판적이며 책임감 있는 주체로서 서명하는 단계입니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Setup form -->
+            <div class="max-w-md mx-auto bg-amber-50 p-6 rounded-xl border-2 border-amber-300 shadow-inner">
+                <h3 class="text-center font-bold text-blue-900 mb-4">선서증서에 기록할 탐정 정보를 입력해주세요</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">나의 멋진 탐정 이름</label>
+                        <input type="text" id="citizen-name" placeholder="예: 홍길동 탐정" 
+                               class="w-full px-4 py-2 rounded-lg border-2 border-slate-300 focus:outline-none focus:border-blue-900 text-center font-bold text-lg">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">원하는 나의 데이터 아바타 (8가지 중 선택)</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" onclick="selectAvatar('🕵️‍♂️', this)" class="avatar-btn p-3 bg-amber-100 rounded-lg border-2 border-blue-900 text-2xl hover:scale-105 transition duration-150">🕵️‍♂️</button>
+                            <button type="button" onclick="selectAvatar('🔍', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">🔍</button>
+                            <button type="button" onclick="selectAvatar('💻', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">💻</button>
+                            <button type="button" onclick="selectAvatar('✨', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">✨</button>
+                            <button type="button" onclick="selectAvatar('🤖', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">🤖</button>
+                            <button type="button" onclick="selectAvatar('🎓', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">🎓</button>
+                            <button type="button" onclick="selectAvatar('💡', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">💡</button>
+                            <button type="button" onclick="selectAvatar('🦁', this)" class="avatar-btn p-3 bg-white rounded-lg border border-slate-300 text-2xl hover:scale-105 transition duration-150">🦁</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button onclick="startOath()" class="w-full py-3 bg-blue-900 text-white font-extrabold rounded-lg hover:bg-blue-800 shadow-lg flex items-center justify-center space-x-2 transition active:scale-95">
+                        <span>선서 시작하기</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2: INTERACTIVE OATH (데이터 시민 선서) -->
+        <section id="step-oath" class="hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 custom-border page-transition">
+            <div class="text-center mb-6">
+                <span class="inline-block bg-blue-100 text-blue-900 text-xs font-extrabold px-3 py-1 rounded-full mb-2">
+                    약속 및 다짐 단계 ✋
+                </span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">데이터 시민 선서</h2>
+                <p class="text-slate-600 text-sm mt-1">각 항목을 소리내어 크게 읽고 다짐의 체크를 눌러주세요!</p>
+            </div>
+
+            <!-- The Oath Board (Matching image_ed7aa8.png verbatim style) -->
+            <div class="bg-amber-50 rounded-2xl p-6 md:p-8 border-2 border-orange-300 shadow-inner max-w-2xl mx-auto mb-8 relative">
+                <!-- Decorative top badge -->
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-orange-400 text-white font-bold px-6 py-1 rounded-full text-xs shadow-md flex items-center space-x-2">
+                    <span>⚛️</span>
+                    <span>데이터 시민 선서</span>
+                </div>
+
+                <div class="space-y-6 mt-4">
+                    <!-- Pledge Item 1 -->
+                    <div id="pledge-card-1" onclick="togglePledge(1)" class="cursor-pointer bg-white p-4 rounded-xl border-2 border-slate-200 hover:border-orange-400 transition-all duration-200 flex items-start space-x-4">
+                        <div id="checkbox-1" class="w-8 h-8 rounded-full border-2 border-slate-300 flex items-center justify-center text-white bg-slate-100 transition-all">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <span class="text-xs font-bold text-orange-600 block">첫 번째 약속</span>
+                            <h4 class="font-extrabold text-base md:text-lg text-slate-800">하나, 정직하게!</h4>
+                            <p class="text-slate-600 text-sm font-semibold">내가 경험한 것만 쓰겠습니다.</p>
+                        </div>
+                        <span class="text-xs bg-slate-100 px-2 py-1 rounded font-bold text-slate-500 hover:bg-amber-100">정직 데이터</span>
+                    </div>
+
+                    <!-- Pledge Item 2 -->
+                    <div id="pledge-card-2" onclick="togglePledge(2)" class="cursor-pointer bg-white p-4 rounded-xl border-2 border-slate-200 hover:border-orange-400 transition-all duration-200 flex items-start space-x-4">
+                        <div id="checkbox-2" class="w-8 h-8 rounded-full border-2 border-slate-300 flex items-center justify-center text-white bg-slate-100 transition-all">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <span class="text-xs font-bold text-orange-600 block">두 번째 약속</span>
+                            <h4 class="font-extrabold text-base md:text-lg text-slate-800">둘, 비판적으로!</h4>
+                            <p class="text-slate-600 text-sm font-semibold">의심스러운 데이터는 검증하겠습니다.</p>
+                        </div>
+                        <span class="text-xs bg-slate-100 px-2 py-1 rounded font-bold text-slate-500 hover:bg-amber-100">비판적 사고</span>
+                    </div>
+
+                    <!-- Pledge Item 3 -->
+                    <div id="pledge-card-3" onclick="togglePledge(3)" class="cursor-pointer bg-white p-4 rounded-xl border-2 border-slate-200 hover:border-orange-400 transition-all duration-200 flex items-start space-x-4">
+                        <div id="checkbox-3" class="w-8 h-8 rounded-full border-2 border-slate-300 flex items-center justify-center text-white bg-slate-100 transition-all">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <span class="text-xs font-bold text-orange-600 block">세 번째 약속</span>
+                            <h4 class="font-extrabold text-base md:text-lg text-slate-800">셋, 책임감 있게!</h4>
+                            <p class="text-slate-600 text-sm font-semibold">내 데이터가 남에게 미칠 영향을 생각하겠습니다.</p>
+                        </div>
+                        <span class="text-xs bg-slate-100 px-2 py-1 rounded font-bold text-slate-500 hover:bg-amber-100">책임 공유</span>
+                    </div>
+
+                    <p class="text-center font-extrabold text-lg text-orange-600 pt-3 border-t border-orange-200 animate-pulse">
+                        "우리가 만드는 신뢰할 수 있는 데이터 세상!" 🌐
+                    </p>
+                </div>
+            </div>
+
+            <!-- Button actions -->
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-4 max-w-2xl mx-auto">
+                <button onclick="goToStep('intro')" class="w-full md:w-auto px-6 py-3 border-2 border-slate-300 rounded-lg font-bold hover:bg-slate-100 text-slate-600 transition">
+                    뒤로가기
+                </button>
+                <button id="btn-next-to-sign" disabled onclick="goToSignStep()" class="w-full md:w-grow px-12 py-3 bg-slate-300 text-slate-500 font-extrabold rounded-lg cursor-not-allowed transition duration-150 flex items-center justify-center space-x-2">
+                    <span>모두 약속했습니다 (0/3)</span>
+                    <i class="fa-solid fa-signature"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 3: DIGITAL SIGNATURE PAD -->
+        <section id="step-signature" class="hidden bg-white rounded-2xl shadow-xl p-6 md:p-8 custom-border page-transition">
+            <div class="text-center mb-6">
+                <span class="inline-block bg-orange-100 text-orange-800 text-xs font-extrabold px-3 py-1 rounded-full mb-2">
+                    서명하기 ✍️
+                </span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-blue-900">데이터 탐정의 다짐 서명</h2>
+                <p class="text-slate-600 text-sm mt-1">선서증서에 들어갈 자신의 멋진 사인을 아래 패드에 그려보세요!</p>
+            </div>
+
+            <!-- Signature Canvas Container -->
+            <div class="max-w-md mx-auto bg-slate-50 rounded-2xl p-4 border-2 border-slate-300 shadow-inner relative">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs text-slate-400 font-bold">서명란 (마우스나 손가락을 사용하세요)</span>
+                    <button onclick="clearSignature()" class="text-xs text-rose-500 hover:text-rose-700 font-extrabold flex items-center space-x-1">
+                        <i class="fa-solid fa-eraser"></i>
+                        <span>다시 그리기</span>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg border-2 border-dashed border-slate-400 overflow-hidden" style="height: 200px;">
+                    <canvas id="sig-canvas" class="w-full h-full cursor-crosshair touch-none"></canvas>
+                </div>
+
+                <div class="mt-4 p-3 bg-amber-50 rounded-lg text-center">
+                    <p class="text-xs text-amber-800 font-semibold">
+                        "나 <span id="sign-placeholder-name" class="font-bold underline text-blue-900 text-sm"></span>(은)는 정직한 데이터 세상을 만들 것을 다짐합니다."
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-4 max-w-md mx-auto mt-6">
+                <button onclick="goToStep('oath')" class="w-full md:w-auto px-6 py-3 border-2 border-slate-300 rounded-lg font-bold hover:bg-slate-100 text-slate-600 transition">
+                    이전으로
+                </button>
+                <button onclick="generateCertificate()" class="w-full md:w-grow px-10 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-extrabold rounded-lg hover:shadow-lg transition active:scale-95 flex items-center justify-center space-x-2">
+                    <span>선서증서 완성하기! 🌟</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 4: CERTIFICATE DISPLAY & DOWNLOAD -->
+        <section id="step-certificate" class="hidden bg-white rounded-2xl shadow-xl p-4 md:p-8 custom-border page-transition">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-800 text-xs font-extrabold px-4 py-1.5 rounded-full mb-3 shadow-sm">
+                    <span>👑 데이터 시민 임명 완료</span>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">축하합니다! 이제 데이터 시민입니다</h2>
+                <p class="text-slate-500 text-xs md:text-sm mt-1">자랑스러운 시민 서명증서가 완성되었습니다. 이미지로 소장하거나 인쇄해보세요!</p>
+            </div>
+
+            <!-- Interactive Beautiful Certificate Frame -->
+            <div class="relative bg-amber-50 rounded-2xl p-4 md:p-8 border-8 border-double border-blue-900 shadow-2xl max-w-xl mx-auto overflow-hidden text-center select-none" id="printable-area">
+                
+                <!-- Inner Elegant Frame -->
+                <div class="border-2 border-amber-300 p-6 md:p-8 rounded-lg bg-amber-50 relative animate-fade-in-up">
+                    
+                    <!-- Top Ribbon Decorative -->
+                    <div class="flex justify-center items-center mb-4">
+                        <span class="text-3xl filter drop-shadow">📜</span>
+                    </div>
+
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-widest text-blue-900 mb-2">데이터 시민 선서증</h1>
+                    <div class="w-32 h-1 bg-amber-500 mx-auto mb-6"></div>
+
+                    <!-- Personal Avatar & Name Display -->
+                    <div class="flex items-center justify-center space-x-3 mb-6 bg-white py-2 px-4 rounded-full border border-amber-200 inline-flex shadow-sm">
+                        <span id="cert-avatar" class="text-2xl">🕵️‍♂️</span>
+                        <span id="cert-name" class="font-extrabold text-slate-900 text-lg md:text-xl"></span>
+                    </div>
+
+                    <!-- Verbatim Content from Oath and Image References -->
+                    <div class="text-slate-800 space-y-4 mb-8 text-sm md:text-base leading-relaxed text-left max-w-md mx-auto font-medium">
+                        <p class="text-center text-xs text-blue-800 font-bold bg-blue-50 py-1 rounded-lg">
+                            "가짜 리뷰 데이터 사건을 해결한 자랑스러운 탐정"
+                        </p>
+                        <p class="text-center text-slate-600 font-semibold mb-3">
+                            위 탐정은 가짜 정보를 구별해내고 참된 사실을 밝혀내는 데이터 탐정 임무를 수여받은 바, 다음과 같이 정의로운 데이터 시민으로서 정성을 다할 것을 엄숙히 선서하였습니다.
+                        </p>
+                        
+                        <!-- Core Principles checklist (verbatim image_ed7aa8.png elements) -->
+                        <div class="border-t border-b border-amber-200 py-3 space-y-2">
+                            <div class="flex items-center space-x-2 font-extrabold text-xs md:text-sm text-slate-800">
+                                <span class="text-orange-500">하나,</span>
+                                <span>정직하게 경험한 것만 정성껏 쓰기</span>
+                            </div>
+                            <div class="flex items-center space-x-2 font-extrabold text-xs md:text-sm text-slate-800">
+                                <span class="text-orange-500">둘,</span>
+                                <span>의심스러운 데이터는 비판적으로 검증하기</span>
+                            </div>
+                            <div class="flex items-center space-x-2 font-extrabold text-xs md:text-sm text-slate-800">
+                                <span class="text-orange-500">셋,</span>
+                                <span>나의 데이터가 타인에 미칠 영향을 깊이 생각하기</span>
+                            </div>
+                        </div>
+
+                        <p class="text-center font-extrabold text-orange-600 text-xs md:text-sm pt-2">
+                            우리가 만드는 신뢰할 수 있는 데이터 세상!
+                        </p>
+                    </div>
+
+                    <!-- Date & Seal & Signature Area -->
+                    <div class="grid grid-cols-2 gap-4 items-center pt-4 border-t border-amber-200">
+                        <div class="text-left">
+                            <span class="block text-xs text-slate-400 font-bold">선서 일자</span>
+                            <span id="cert-date" class="font-bold text-slate-700 text-sm"></span>
+                        </div>
+                        <div class="relative flex justify-end items-center space-x-4">
+                            <!-- Direct signature image container -->
+                            <div class="text-right mr-2">
+                                <span class="block text-2xs text-slate-400 font-bold">선서자 서명</span>
+                                <div class="h-10 w-24 border-b border-slate-300 flex items-center justify-end">
+                                    <img id="cert-signature-img" src="" alt="서명" class="max-h-10 object-contain">
+                                </div>
+                            </div>
+                            
+                            <!-- Gold Ribbon Seal Decorator -->
+                            <div class="w-14 h-14 rounded-full seal-bg border-2 border-white shadow-md flex items-center justify-center text-white font-extrabold text-2xs relative overflow-hidden flex-shrink-0 animate-pulse">
+                                <div class="absolute inset-0 bg-yellow-400 opacity-20 transform rotate-45"></div>
+                                <div class="text-center z-10 leading-none">
+                                    <span class="text-xs block">DATA</span>
+                                    <span class="text-3xs block text-yellow-200 font-extrabold">CITIZEN</span>
+                                </div>
+                                <div class="absolute bottom-0 w-3 h-3 bg-red-600 transform rotate-45 translate-y-2 translate-x-1"></div>
+                                <div class="absolute bottom-0 w-3 h-3 bg-red-600 transform rotate-45 translate-y-2 -translate-x-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Download Hidden Canvas (to draw the high-quality image of certificate) -->
+            <canvas id="export-canvas" class="hidden"></canvas>
+
+            <!-- Final actions -->
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-4 mt-8 max-w-xl mx-auto">
+                <button onclick="resetOathFlow()" class="w-full md:w-auto px-6 py-3 border-2 border-slate-300 rounded-lg font-bold hover:bg-slate-100 text-slate-600 transition">
+                    새 선서증 작성
+                </button>
+                <button onclick="downloadCertificate()" class="w-full md:flex-grow py-3 bg-blue-900 text-white font-extrabold rounded-lg hover:bg-blue-800 shadow-xl transition active:scale-95 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>선서증서 고화질 이미지로 다운로드</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto px-4 space-y-2">
+            <p>© 2026 AI 맛집 분석단 & 데이터 시민 연대. 모든 권리 보유.</p>
+            <p class="text-2xs">본 애플리케이션은 학생들의 유익한 데이터 리터러시 교육(참고 문서: image_ed7b00.png, image_ed7aa8.png)을 위해 정성껏 제작되었습니다.</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic Script -->
+    <script>
+        // Global App State
+        let state = {
+            currentStep: 'intro',
+            name: '',
+            avatar: '🕵️‍♂️',
+            pledges: {
+                1: false,
+                2: false,
+                3: false
+            },
+            signatureDrawn: false
+        };
+
+        // DOM elements
+        let canvas, ctx, isDrawing = false;
+
+        // Custom Safe Rounded Rectangle Polyfill for HTML5 Canvas
+        function drawRoundRectPolyfill(context, x, y, width, height, radius) {
+            if (context.roundRect) {
+                context.roundRect(x, y, width, height, radius);
+            } else {
+                if (typeof radius === 'undefined') {
+                    radius = 5;
+                }
+                if (typeof radius === 'number') {
+                    radius = {tl: radius, tr: radius, br: radius, bl: radius};
+                } else if (Array.isArray(radius)) {
+                    radius = {tl: radius[0], tr: radius[0], br: radius[0], bl: radius[0]};
+                }
+                context.beginPath();
+                context.moveTo(x + radius.tl, y);
+                context.lineTo(x + width - radius.tr, y);
+                context.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+                context.lineTo(x + width, y + height - radius.br);
+                context.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+                context.lineTo(x + radius.bl, y + height);
+                context.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+                context.lineTo(x, y + radius.tl);
+                context.quadraticCurveTo(x, y, x + radius.tl, y);
+                context.closePath();
+            }
+        }
+
+        // Robust initialization function
+        function appInitialize() {
+            initCanvas();
+            
+            // Add Window resize event to recalculate signature canvas boundary
+            window.addEventListener('resize', () => {
+                if (state.currentStep === 'signature') {
+                    resizeCanvas();
+                }
+            });
+        }
+
+        // Safe DOM check for embedded environment previews
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            appInitialize();
+        } else {
+            document.addEventListener('DOMContentLoaded', appInitialize);
+        }
+
+        // Navigation Engine
+        function goToStep(stepId) {
+            playSound('click');
+            // Hide all sections
+            document.getElementById('step-intro').classList.add('hidden');
+            document.getElementById('step-oath').classList.add('hidden');
+            document.getElementById('step-signature').classList.add('hidden');
+            document.getElementById('step-certificate').classList.add('hidden');
+
+            // Show targets
+            document.getElementById(`step-${stepId}`).classList.remove('hidden');
+            state.currentStep = stepId;
+
+            // Trigger action on entry
+            if (stepId === 'signature') {
+                document.getElementById('sign-placeholder-name').textContent = state.name;
+                setTimeout(resizeCanvas, 150); // Allow iframe layout to settle completely
+            }
+        }
+
+        // Avatar Picker
+        function selectAvatar(emoji, element) {
+            playSound('click');
+            state.avatar = emoji;
+            
+            // Remove active style from all
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.classList.remove('border-blue-900', 'bg-amber-100', 'scale-105');
+                btn.classList.add('border-slate-300', 'bg-white');
+            });
+
+            // Set active to selected
+            element.classList.remove('border-slate-300', 'bg-white');
+            element.classList.add('border-blue-900', 'bg-amber-100', 'scale-105');
+        }
+
+        // Action: Intro to Oath Stage
+        function startOath() {
+            const nameInput = document.getElementById('citizen-name');
+            if (!nameInput.value.trim()) {
+                showNotification('자랑스러운 데이터 시민이 되기 위해 먼저 탐정 이름을 꼭 입력해 주세요! 🥰');
+                return;
+            }
+            state.name = nameInput.value.trim();
+            goToStep('oath');
+        }
+
+        // Pledge Checklist Control
+        function togglePledge(id) {
+            state.pledges[id] = !state.pledges[id];
+            playSound('check');
+
+            const card = document.getElementById(`pledge-card-${id}`);
+            const checkbox = document.getElementById(`checkbox-${id}`);
+
+            if (state.pledges[id]) {
+                card.classList.remove('border-slate-200');
+                card.classList.add('border-orange-500', 'bg-orange-50/50');
+                checkbox.classList.remove('bg-slate-100', 'border-slate-300');
+                checkbox.classList.add('bg-orange-500', 'border-orange-600');
+            } else {
+                card.classList.add('border-slate-200');
+                card.classList.remove('border-orange-500', 'bg-orange-50/50');
+                checkbox.classList.add('bg-slate-100', 'border-slate-300');
+                checkbox.classList.remove('bg-orange-500', 'border-orange-600');
+            }
+
+            updatePledgeButtonState();
+        }
+
+        function updatePledgeButtonState() {
+            const count = Object.values(state.pledges).filter(Boolean).length;
+            const btn = document.getElementById('btn-next-to-sign');
+            
+            if (count === 3) {
+                btn.disabled = false;
+                btn.classList.remove('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+                btn.classList.add('bg-blue-900', 'text-white', 'hover:bg-blue-800', 'shadow-lg');
+                btn.innerHTML = '<span>서명하러 가기! ✨</span> <i class="fa-solid fa-arrow-right"></i>';
+            } else {
+                btn.disabled = true;
+                btn.classList.add('bg-slate-300', 'text-slate-500', 'cursor-not-allowed');
+                btn.classList.remove('bg-blue-900', 'text-white', 'hover:bg-blue-800', 'shadow-lg');
+                btn.innerHTML = `<span>모두 약속했습니다 (${count}/3)</span> <i class="fa-solid fa-signature"></i>`;
+            }
+        }
+
+        function goToSignStep() {
+            goToStep('signature');
+        }
+
+        // Canvas Signature Pad Mechanics
+        function initCanvas() {
+            canvas = document.getElementById('sig-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+
+            // Event Listeners for Drawing
+            // Mouse Events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            window.addEventListener('mouseup', stopDrawing);
+
+            // Touch Events (Fully Responsive & Tablet Friendly)
+            canvas.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                isDrawing = true;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                playSound('brush');
+                e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDrawing) return;
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = '#1E3A8A'; // Navy theme ink
+                ctx.lineWidth = 3.5;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+                playSound('brush');
+                state.signatureDrawn = true;
+                e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', () => {
+                isDrawing = false;
+            });
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // Clear or reset context properties after resize
+            ctx.strokeStyle = '#1E3A8A';
+            ctx.lineWidth = 3.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            playSound('brush');
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+            playSound('brush');
+            state.signatureDrawn = true;
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearSignature() {
+            playSound('click');
+            if (canvas && ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                state.signatureDrawn = false;
+            }
+        }
+
+        // Reset flow
+        function resetOathFlow() {
+            state.pledges = {1: false, 2: false, 3: false};
+            state.signatureDrawn = false;
+            
+            // Reset pledges card view styling
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`pledge-card-${i}`);
+                const checkbox = document.getElementById(`checkbox-${i}`);
+                if (card && checkbox) {
+                    card.classList.add('border-slate-200');
+                    card.classList.remove('border-orange-500', 'bg-orange-50/50');
+                    checkbox.classList.add('bg-slate-100', 'border-slate-300');
+                    checkbox.classList.remove('bg-orange-500', 'border-orange-600');
+                }
+            }
+            updatePledgeButtonState();
+            clearSignature();
+            document.getElementById('citizen-name').value = '';
+            goToStep('intro');
+        }
+
+        // Certificate Builder & State Output
+        function generateCertificate() {
+            if (!state.signatureDrawn) {
+                showNotification('자랑스러운 데이터 탐정님의 사인을 그려서 서명해주세요! 🖌️');
+                return;
+            }
+
+            playSound('success');
+            
+            // Trigger beautiful particle blast
+            try {
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            } catch(err) {
+                console.log("Confetti system offline, proceeding.");
+            }
+
+            // Set final step elements
+            document.getElementById('cert-name').textContent = `${state.name} 탐정`;
+            document.getElementById('cert-avatar').textContent = state.avatar;
+
+            // Date format in Korean
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = d.getMonth() + 1;
+            const date = d.getDate();
+            document.getElementById('cert-date').textContent = `${year}년 ${month}월 ${date}일`;
+
+            // Export signature pad sketch to an image safely
+            const sigImg = document.getElementById('cert-signature-img');
+            sigImg.src = canvas.toDataURL('image/png');
+
+            goToStep('certificate');
+        }
+
+        // Export high-resolution PNG using Canvas Drawing
+        function downloadCertificate() {
+            playSound('click');
+            const exportCanvas = document.getElementById('export-canvas');
+            const expCtx = exportCanvas.getContext('2d');
+
+            // Setup dimensions for high quality print resolution (e.g. 1200x1550)
+            exportCanvas.width = 1200;
+            exportCanvas.height = 1550;
+
+            // Draw Background Cream Board
+            expCtx.fillStyle = '#FDF6E2';
+            expCtx.fillRect(0, 0, 1200, 1550);
+
+            // Draw Dark Navy Border (Outer margin: 40px)
+            expCtx.strokeStyle = '#1E3A8A';
+            expCtx.lineWidth = 14;
+            expCtx.strokeRect(40, 40, 1120, 1470);
+
+            // Draw Gold Ribbon Frame (Inner border margin: 60px)
+            expCtx.strokeStyle = '#F59E0B';
+            expCtx.lineWidth = 6;
+            expCtx.strokeRect(60, 60, 1080, 1430);
+
+            // Center Align Text settings
+            expCtx.textAlign = 'center';
+            expCtx.fillStyle = '#1E3A8A';
+
+            // Document Title
+            expCtx.font = 'bold 64px sans-serif';
+            expCtx.fillText('데이터 시민 선서증', 600, 200);
+
+            // Elegant Underline Divider
+            expCtx.fillStyle = '#F59E0B';
+            expCtx.fillRect(480, 230, 240, 8);
+
+            // Header Icon / Emoji
+            expCtx.font = '70px Arial';
+            expCtx.fillText('📜', 600, 340);
+
+            // Recipient Meta Card background
+            expCtx.fillStyle = '#FFFFFF';
+            expCtx.beginPath();
+            drawRoundRectPolyfill(expCtx, 300, 390, 600, 100, 50);
+            expCtx.fill();
+            expCtx.strokeStyle = '#FDE68A';
+            expCtx.lineWidth = 3;
+            expCtx.stroke();
+
+            // Name details
+            expCtx.fillStyle = '#1E293B';
+            expCtx.font = 'bold 38px sans-serif';
+            expCtx.fillText(`${state.avatar}  ${state.name} 탐정`, 600, 455);
+
+            // Base Declarations verbatim
+            expCtx.textAlign = 'center';
+            expCtx.fillStyle = '#475569';
+            expCtx.font = 'bold 24px sans-serif';
+            
+            const line1 = "가짜 리뷰 데이터 사건을 성공적으로 해결한 자랑스러운 데이터 탐정으로서,";
+            const line2 = "아래와 같이 올바르고 정의로운 최고의 '데이터 시민'이 될 것을";
+            const line3 = "동료 친구들과 전 사회 앞에 엄숙히 서명하고 선서합니다.";
+            expCtx.fillText(line1, 600, 560);
+            expCtx.fillText(line2, 600, 610);
+            expCtx.fillText(line3, 600, 660);
+
+            // White Box for the Core Pledges (verbatim image_ed7aa8.png rules)
+            expCtx.fillStyle = '#FFFDF5';
+            expCtx.beginPath();
+            drawRoundRectPolyfill(expCtx, 200, 720, 800, 360, 20);
+            expCtx.fill();
+            expCtx.strokeStyle = '#FDBA74';
+            expCtx.lineWidth = 4;
+            expCtx.stroke();
+
+            // Draw 3 Core Pledge Texts inside Box
+            expCtx.textAlign = 'left';
+            expCtx.fillStyle = '#D97706';
+            expCtx.font = 'bold 26px sans-serif';
+            expCtx.fillText('하나, 정직하게!  내가 경험한 것만 쓰겠습니다.', 250, 795);
+            expCtx.fillText('둘, 비판적으로!  의심스러운 데이터는 검증하겠습니다.', 250, 875);
+            expCtx.fillText('셋, 책임감 있게! 내 데이터가 남에게 미칠 영향을 생각하겠습니다.', 250, 955);
+
+            expCtx.textAlign = 'center';
+            expCtx.fillStyle = '#EA580C';
+            expCtx.font = 'bold 28px sans-serif';
+            expCtx.fillText('“ 우리가 만드는 신뢰할 수 있는 데이터 세상! ”', 600, 1035);
+
+            // Date Stamp
+            expCtx.textAlign = 'left';
+            expCtx.fillStyle = '#94A3B8';
+            expCtx.font = 'bold 22px sans-serif';
+            expCtx.fillText('선서 일자', 200, 1170);
+
+            expCtx.fillStyle = '#334155';
+            expCtx.font = 'bold 28px sans-serif';
+            const d = new Date();
+            expCtx.fillText(`${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`, 200, 1220);
+
+            // Stamp Ribbons draw helper function
+            function drawGoldSeal(ctx, cx, cy, r) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                
+                // Red Ribbons hanging out bottom
+                ctx.fillStyle = '#DC2626';
+                ctx.beginPath();
+                ctx.moveTo(-15, 20);
+                ctx.lineTo(-40, 110);
+                ctx.lineTo(-15, 95);
+                ctx.lineTo(10, 110);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(15, 20);
+                ctx.lineTo(40, 110);
+                ctx.lineTo(15, 95);
+                ctx.lineTo(-10, 110);
+                ctx.closePath();
+                ctx.fill();
+
+                // Main circular seal shape
+                ctx.fillStyle = '#F59E0B';
+                
+                // Star shape jagged edge generator
+                ctx.beginPath();
+                const spikes = 24;
+                const outerRadius = r;
+                const innerRadius = r - 8;
+                let rot = Math.PI / 2 * 3;
+                let x = 0, y = 0;
+                let step = Math.PI / spikes;
+
+                for (let i = 0; i < spikes; i++) {
+                    x = Math.cos(rot) * outerRadius;
+                    y = Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+
+                    x = Math.cos(rot) * innerRadius;
+                    y = Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                }
+                ctx.closePath();
+                ctx.fill();
+
+                // Innermost smooth golden circle
+                ctx.fillStyle = '#D97706';
+                ctx.beginPath();
+                ctx.arc(0, 0, r - 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Text labels
+                ctx.fillStyle = '#FFF';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.fillText('DATA', 0, -10);
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillStyle = '#FEF08A';
+                ctx.fillText('CITIZEN', 0, 10);
+
+                ctx.restore();
+            }
+
+            drawGoldSeal(expCtx, 930, 1220, 65);
+
+            // Draw user signature scaled & positioned nicely
+            const sigImgElement = document.getElementById('cert-signature-img');
+            const userSigImg = new Image();
+            userSigImg.onload = function() {
+                // Background underline for signature
+                expCtx.strokeStyle = '#CBD5E1';
+                expCtx.lineWidth = 2;
+                expCtx.beginPath();
+                expCtx.moveTo(560, 1230);
+                expCtx.lineTo(760, 1230);
+                expCtx.stroke();
+
+                expCtx.fillStyle = '#94A3B8';
+                expCtx.font = 'bold 22px sans-serif';
+                expCtx.textAlign = 'right';
+                expCtx.fillText('선서자 서명', 540, 1220);
+
+                // Drawing scaled signature
+                expCtx.drawImage(userSigImg, 560, 1150, 200, 80);
+
+                // Complete and trigger user download link safely
+                try {
+                    const dataURL = exportCanvas.toDataURL('image/png');
+                    const downloadLink = document.createElement('a');
+                    downloadLink.download = `데이터_시민_선서증_${state.name}.png`;
+                    downloadLink.href = dataURL;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                } catch(err) {
+                    showNotification("브라우저 제한으로 다운로드가 어려울 경우, 인쇄 기능을 활용해 보세요!");
+                }
+            };
+            userSigImg.src = sigImgElement.src;
+        }
+    </script>
+</body>
+</html>
