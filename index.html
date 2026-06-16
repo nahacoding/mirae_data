@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 탐정 아카데미 - 올바른 데이터 세상을 향한 여정</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Gowun Dodum & Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Gowun Dodum', 'Inter', sans-serif;
+            background-color: #FDF6E2; /* Warm detective paper tone matching both apps */
+        }
+        .glow-hover:hover {
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.3), 0 8px 10px -6px rgba(30, 58, 138, 0.3);
+            transform: translateY(-4px);
+        }
+        .navy-border {
+            border: 4px solid #1E3A8A;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between antialiased selection:bg-amber-200">
+
+    <!-- Header banner matching the detective workspace theme -->
+    <header class="bg-blue-900 text-white py-6 px-6 shadow-md border-b-4 border-amber-500">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between text-center md:text-left space-y-4 md:space-y-0">
+            <div class="flex items-center space-x-4">
+                <span class="text-4xl">🕵️‍♂️</span>
+                <div>
+                    <h1 class="font-extrabold text-2xl tracking-wide text-amber-300">데이터 탐정 아카데미</h1>
+                    <p class="text-xs text-slate-200 mt-0.5">Data Detective Academy : 데이터 리터러시 교육 워크숍</p>
+                </div>
+            </div>
+            <div class="bg-amber-500 text-blue-900 font-extrabold px-4 py-2 rounded-full text-xs shadow-md animate-pulse">
+                🔍 올바른 데이터 세상 만들기 프로젝트
+            </div>
+        </div>
+    </header>
+
+    <!-- Interactive Portal Main Content -->
+    <main class="max-w-5xl w-full mx-auto px-4 py-10 flex-grow">
+        
+        <!-- Welcome banner -->
+        <section class="bg-white rounded-2xl shadow-xl p-6 md:p-10 navy-border mb-12 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-blue-50 rounded-full opacity-50 pointer-events-none"></div>
+            <div class="absolute -bottom-10 -right-10 w-45 h-45 bg-amber-50 rounded-full opacity-50 pointer-events-none"></div>
+
+            <span class="inline-block bg-blue-100 text-blue-900 text-xs font-extrabold px-4 py-1.5 rounded-full mb-3">
+                WELCOME DETECTIVES 💡
+            </span>
+            <h2 class="text-2xl md:text-4xl font-extrabold text-blue-900 leading-tight">
+                데이터 속에 숨겨진 진짜 진실을 찾아라!
+            </h2>
+            <p class="text-slate-600 mt-4 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+                우리는 매일 수많은 데이터 속에서 살아가고 있습니다. 하지만 그 데이터가 모두 진짜일까요?<br>
+                직접 <strong>데이터 탐정</strong>이 되어 왜곡된 정보를 찾아 바로잡고, 정직하고 책임감 있는 <strong>데이터 시민</strong>으로 성장해 봅시다!
+            </p>
+        </section>
+
+        <!-- Two main application cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            
+            <!-- App 1: AI 맛집 분석단 (image_ed7b00.png reference) -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 navy-border flex flex-col justify-between glow-hover transition-all duration-300 relative">
+                <div>
+                    <!-- Badge inside card -->
+                    <span class="inline-block bg-rose-100 text-rose-800 text-xs font-extrabold px-3 py-1 rounded-full mb-4">
+                        STEP 1 : 사건 해결 임무 🔍
+                    </span>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="text-4xl">📊</span>
+                        <h3 class="text-xl md:text-2xl font-extrabold text-slate-800">AI 맛집 분석단</h3>
+                    </div>
+                    <p class="text-slate-600 text-sm md:text-base leading-relaxed mb-6">
+                        <strong>가짜 리뷰 데이터 사건(image_ed7b00.png)</strong>이 일어났습니다! 맛없는 맛집이 가짜 리뷰를 조작하여 1위가 되었다는 소식입니다. 
+                        AI 맛집 분석단 시스템을 가동하여 가짜 데이터를 조작해낸 리뷰를 찾아내고, 진짜 맛집의 정직한 순위를 복원하는 미션에 참여해 보세요.
+                    </p>
+                    
+                    <!-- Verbatim elements references from image_ed7b00.png -->
+                    <div class="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-200">
+                        <span class="block text-xs font-extrabold text-slate-500 mb-2">📋 임무 세부사항</span>
+                        <ul class="text-xs text-slate-600 space-y-1.5">
+                            <li>• <strong>사건:</strong> 가짜 리뷰로 1위가 된 맛없는 맛집</li>
+                            <li>• <strong>임무:</strong> 가짜 데이터를 찾아내어 참된 진짜 순위 복원하기</li>
+                            <li>• <strong>도구:</strong> AI 맛집 분석단 전용 데이터 시뮬레이터</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <a href="./app1-detective/index.html" class="w-full py-4 bg-blue-900 text-white text-center font-extrabold rounded-xl hover:bg-blue-800 shadow-lg block transition active:scale-98">
+                    <span>1단계 탐정 임무 수여받기 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                </a>
+            </div>
+
+            <!-- App 2: 데이터 시민 선서 (image_ed7aa8.png reference) -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 navy-border flex flex-col justify-between glow-hover transition-all duration-300 relative">
+                <div>
+                    <!-- Badge inside card -->
+                    <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full mb-4">
+                        STEP 2 : 사회적 다짐 📜
+                    </span>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="text-4xl">✍️</span>
+                        <h3 class="text-xl md:text-2xl font-extrabold text-slate-800">데이터 시민 선서</h3>
+                    </div>
+                    <p class="text-slate-600 text-sm md:text-base leading-relaxed mb-6">
+                        사건을 멋지게 해결했다면 이제는 다짐의 시간입니다. 올바른 데이터를 작성하고 활용할 것을 전 세계 친구들 앞에 약속해 봐요. 
+                        <strong>데이터 시민 선서(image_ed7aa8.png)</strong>의 세 가지 원칙을 깊이 새기며 본인의 이름과 사인으로 멋진 인증서를 완성해 보세요!
+                    </p>
+
+                    <!-- Verbatim elements references from image_ed7aa8.png -->
+                    <div class="bg-amber-50/50 p-4 rounded-xl mb-6 border border-amber-200">
+                        <span class="block text-xs font-extrabold text-amber-800 mb-2">⚛️ 데이터 시민의 3대 약속</span>
+                        <ul class="text-xs text-slate-600 space-y-1.5">
+                            <li>• <strong>하나, 정직하게!</strong> 내가 직접 경험한 데이터만 솔직하게 쓰기</li>
+                            <li>• <strong>둘, 비판적으로!</strong> 의심스러운 가짜 리뷰 등은 늘 검증하기</li>
+                            <li>• <strong>셋, 책임감 있게!</strong> 내가 공유한 데이터의 선한 영향력 생각하기</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <a href="./app2-citizen/index.html" class="w-full py-4 bg-amber-500 text-blue-900 text-center font-extrabold rounded-xl hover:bg-amber-400 shadow-lg block transition active:scale-98">
+                    <span>2단계 시민 선서하고 증서 발급받기 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Classroom/Teacher Guildeline info box -->
+        <section class="bg-blue-50 border-2 border-dashed border-blue-300 rounded-2xl p-6">
+            <h4 class="font-extrabold text-blue-950 text-sm mb-3 flex items-center space-x-2">
+                <span>💡</span>
+                <span>선생님 & 학생 가이드 (수업 흐름 안내)</span>
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs md:text-sm text-blue-900 leading-relaxed">
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                    <span class="font-extrabold text-blue-950 block mb-1">01. 사전 준비</span>
+                    수업 시작 전 가짜 리뷰가 사회적으로 어떤 피해를 주는지 모둠원들과 가볍게 이야기 나눕니다.
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                    <span class="font-extrabold text-blue-950 block mb-1">02. 데이터 탐정단 (1단계)</span>
+                    AI 맛집 분석단을 통해 조작 패턴을 비판적으로 탐색하여 가짜 데이터를 걸러냅니다.
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+                    <span class="font-extrabold text-blue-950 block mb-1">03. 시민 선서증 (2단계)</span>
+                    분석을 무사히 마친 후, 앞으로 정직한 작성자가 되겠다는 다짐을 담아 선서증을 다운로드해 공유합니다.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-8 text-center text-xs text-slate-500">
+        <div class="max-w-5xl mx-auto px-4 space-y-2">
+            <p class="font-bold text-slate-600 text-sm">🕵️‍♂️ 데이터 탐정 아카데미 교육 센터</p>
+            <p>본 자료는 디지털 세상 속 신뢰와 책임감을 심어 주기 위한 리터러시 교육 워크숍(image_ed7b00.png, image_ed7aa8.png 관련 과정)의 일환으로 제작되었습니다.</p>
+            <p class="text-2xs text-slate-400 mt-2">© 2026 AI 맛집 분석단 & 데이터 시민 연대. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Audio synthesizing on user interaction for fun feedback -->
+    <script>
+        const playPortalSound = () => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(350, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {
+                console.log('Audio feedback not initialized.');
+            }
+        };
+
+        // Attach sounds to launching anchors
+        document.querySelectorAll('a').forEach(anchor => {
+            anchor.addEventListener('click', () => {
+                playPortalSound();
+            });
+        });
+    </script>
+</body>
+</html>
